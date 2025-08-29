@@ -1,7 +1,16 @@
 import express from "express";
 import auth from "./middlewares/auth.js";
 import { generateToken } from "./middlewares/token.js";
+import Signup from "./controller/signup.js";
+import Login from "./controller/login.js";
+
+
+
 const router = express.Router();
+//Login and Signup Controllers
+const signupController = new Signup();
+const loginController = new Login();
+
 
 // Route to generate token for testing
 // router.post("/api/generate-token", (req, res) => {
@@ -38,3 +47,8 @@ router.post("/api/profile", auth, (req, res) => {
 });
 
 export default router;
+
+// Auth routes
+
+router.post("/api/signup",signupController.createuser);
+router.post("/api/login",loginController.authenticate);

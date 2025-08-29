@@ -1,12 +1,11 @@
 import jwt from 'jsonwebtoken';
 
 export function generateToken(userData) {
-  // payload can be any object containing user data
-  const payload = { 
-    id: 1, 
-    username: dharmik, 
-    role: user, 
-    email: "das@gmamil.com"
+  const payload = {
+    id: userData.id,
+    username: userData.username,
+    role: userData.role,
+    email: userData.email,
   };
   return jwt.sign(payload, process.env.jwt_secret, { expiresIn: '24w' });
 }
