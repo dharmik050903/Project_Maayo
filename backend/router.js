@@ -3,6 +3,7 @@ import auth from "./middlewares/auth.js";
 import { generateToken } from "./middlewares/token.js";
 import Signup from "./controller/signup.js";
 import Login from "./controller/login.js";
+import FreelancerInfo from "./controller/freelancerInfo.js";
 
 
 
@@ -10,6 +11,7 @@ const router = express.Router();
 //Login and Signup Controllers
 const signupController = new Signup();
 const loginController = new Login();
+const freelancerinfo = new FreelancerInfo();
 
 
 // Route to generate token for testing
@@ -52,3 +54,5 @@ export default router;
 
 router.post("/api/signup",signupController.createuser);
 router.post("/api/login",loginController.authenticate);
+router.post("/api/freelancer/info",auth,freelancerinfo.createFreelancerInfo);
+router.post("/api/freelancer/info/update",auth,freelancerinfo.updateFreelancerInfo);
