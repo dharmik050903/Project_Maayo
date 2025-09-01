@@ -1,5 +1,6 @@
-# Dependencies
+# Dependency directories
 node_modules/
+jspm_packages/
 
 # Build outputs
 dist/
@@ -8,19 +9,40 @@ out/
 .next/
 .cache/
 
-# Env files
-.env
-.env.local
-.env.*.local
-
 # Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# Editor/OS
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE / Editor stuff
 .vscode/
 .idea/
+*.swp
+*.swo
+
+# OS generated files
 .DS_Store
 Thumbs.db
+
+# Coverage / testing
+coverage/
+*.lcov
+
+# Temporary
+*.tmp
+*.temp
+
+# Backend specific
+*.sqlite
+*.db
+
+# Lock files (optional, depends on workflow)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
