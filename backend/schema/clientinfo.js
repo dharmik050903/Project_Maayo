@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const clientinfo = new mongoose.Schema({
     personId: { type: mongoose.Schema.Types.ObjectId, ref: 'tblpersonmaster' },
     name: { type: String },
-    active_project: { type: Number,default:0 },
+    active_project: { type: Number,default:0 }, //0 for inactive and 1 for active
     pending_reviews: { type: Number },
     completed_project: { type: Number, default:0 },
     total_spend: { type: Number },

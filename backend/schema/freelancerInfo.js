@@ -5,13 +5,18 @@ const freelancerInfo = new mongoose.Schema({
     name: { type: String },
     title: { type: String, required: true },
     overview: { type: String, required: true },
-    skills: { type: String, required: true },   
-    hourly_rate: { type: Number, required: true },  
+    skills: [
+        {
+            skill: { type: String, required: true },
+            skill_id: { type: mongoose.Schema.Types.ObjectId, ref: 'tblskills', required: true }
+        }
+    ],
+    hourly_rate: { type: Number, required: true },
     experience_level: { type: String, required: true },
     availability: { type: String, required: true },
     portfolio: { type: String },
-    total_projects: { type: Number, default: 0 }, 
-    english_level: { type: String },   
+    total_projects: { type: Number, default: 0 },
+    english_level: { type: String },
     bio: { type: String },
     employement_history: [{
         _id: false,
@@ -28,8 +33,8 @@ const freelancerInfo = new mongoose.Schema({
             link: { type: String }
         }
     ],
-    createdAt: { type: String, default: () => new Date().toISOString() },   
-    updateAt :{type :String , default : null}
-})    
+    createdAt: { type: String, default: () => new Date().toISOString() },
+    updateAt: { type: String, default: null }
+})
 
 export default mongoose.model('tblfreelancerinfo', freelancerInfo);

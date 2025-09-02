@@ -22,7 +22,7 @@ export default class FreelancerInfo {
                 name,
                 title,
                 overview,
-                skills,
+                skills :req.body.skills || [],
                 hourly_rate,
                 experience_level,
                 availability,
