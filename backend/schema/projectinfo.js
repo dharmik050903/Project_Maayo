@@ -16,7 +16,13 @@ const project = new mongoose.Schema({
     ispending : { type: Number, default: 0 }, // 0 - No, 1 - Yes
     isactive : { type: Number, default: 1 },// 0 - no, 1 - Yes
     iscompleted : { type: Number, default: 0 },// 0 - No, 1 - Yes
-    freelancerid : { type: mongoose.Schema.Types.ObjectId, ref: 'tblpersonmaster', default: null },
+    completed_at : { type: String, default: '' },
+    freelancerid : [
+        {
+            freelancerid: { type: mongoose.Schema.Types.ObjectId, ref: 'tblpersonmaster' },
+            freelancername : { type: String ,  default : ''},
+        }
+    ],
     createdAt: { type: String, default: () => new Date().toISOString() },
 })
 

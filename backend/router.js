@@ -6,6 +6,7 @@ import Login from "./controller/login.js";
 import FreelancerInfo from "./controller/freelancerInfo.js";
 import ClientInfo from "./controller/clientinfo.js";
 import skills from "./controller/skills.js";
+import Project from "./controller/project.js";
 
 
 const router = express.Router();
@@ -15,6 +16,7 @@ const loginController = new Login();
 const freelancerinfo = new FreelancerInfo();
 const clientinfo = new ClientInfo();
 const skillsController = new skills();
+const projectController = new Project();
 
 // Route to generate token for testing
 // router.post("/api/generate-token", (req, res) => {
@@ -64,3 +66,8 @@ router.post("/api/freelancer/info",auth,freelancerinfo.createFreelancerInfo);
 router.post("/api/freelancer/info/update",auth,freelancerinfo.updateFreelancerInfo);
 router.post("/api/client/info",auth,clientinfo.createClientInfo);
 router.post("/api/client/info/update",auth,clientinfo.updateClientInfo);
+// Project routes
+router.post("/api/project/create", auth, projectController.createProject);
+router.post("/api/project/list", auth, projectController.listproject);
+router.post("/api/project/update", auth, projectController.updateProject);
+router.post("/api/project/delete", auth, projectController.deleteProject);
