@@ -1,6 +1,7 @@
 import freelancerInfo from "../schema/freelancerInfo.js";
 import PersonMaster from "../schema/PersonMaster.js";
 
+
 export default class FreelancerInfo {
     async createFreelancerInfo(req, res) {
         try {

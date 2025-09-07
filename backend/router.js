@@ -7,6 +7,8 @@ import FreelancerInfo from "./controller/freelancerInfo.js";
 import ClientInfo from "./controller/clientinfo.js";
 import skills from "./controller/skills.js";
 import Project from "./controller/project.js";
+import Review from "./controller/review.js";
+import Bid from "./controller/bid.js";
 
 
 const router = express.Router();
@@ -17,6 +19,8 @@ const freelancerinfo = new FreelancerInfo();
 const clientinfo = new ClientInfo();
 const skillsController = new skills();
 const projectController = new Project();
+const reviewController = new Review();
+const bidController = new Bid();
 
 // Route to generate token for testing
 // router.post("/api/generate-token", (req, res) => {
@@ -71,3 +75,21 @@ router.post("/api/project/create", auth, projectController.createProject);
 router.post("/api/project/list", auth, projectController.listproject);
 router.post("/api/project/update", auth, projectController.updateProject);
 router.post("/api/project/delete", auth, projectController.deleteProject);
+router.post("/api/project/complete", auth, projectController.completeProject);
+router.post("/api/project/stats", auth, projectController.getProjectStats);
+
+// Review routes
+router.post("/api/review/create", auth, reviewController.createReview);
+router.post("/api/review/user", auth, reviewController.getUserReviews);
+router.post("/api/review/project", auth, reviewController.getProjectReviews);
+router.post("/api/review/update", auth, reviewController.updateReview);
+router.post("/api/review/delete", auth, reviewController.deleteReview);
+
+// Bid routes
+router.post("/api/bid/create", auth, bidController.createBid);
+router.post("/api/bid/project", auth, bidController.getProjectBids);
+router.post("/api/bid/freelancer", auth, bidController.getFreelancerBids);
+router.post("/api/bid/accept", auth, bidController.acceptBid);
+router.post("/api/bid/reject", auth, bidController.rejectBid);
+router.post("/api/bid/withdraw", auth, bidController.withdrawBid);
+router.post("/api/bid/update", auth, bidController.updateBid);

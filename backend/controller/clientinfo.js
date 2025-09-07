@@ -94,8 +94,6 @@ export default class ClientInfo {
                 );
             }
 
-         
-
             return res.status(200).json({
                 message: "Update successful",
                 data: {

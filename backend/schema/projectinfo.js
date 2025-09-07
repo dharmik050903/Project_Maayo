@@ -23,6 +23,32 @@ const project = new mongoose.Schema({
             freelancername : { type: String ,  default : ''},
         }
     ],
+    // Bid-related fields
+    accepted_bid_id: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'tblbid' 
+    },
+    bid_deadline: { 
+        type: String 
+    }, // Deadline for submitting bids
+    min_bid_amount: { 
+        type: Number 
+    },
+    max_bid_amount: { 
+        type: Number 
+    },
+    // Project completion and review status
+    completion_date: { 
+        type: String 
+    },
+    client_reviewed: { 
+        type: Number, 
+        default: 0 
+    }, // 0 - not reviewed, 1 - reviewed
+    freelancer_reviewed: { 
+        type: Number, 
+        default: 0 
+    }, // 0 - not reviewed, 1 - reviewed
     createdAt: { type: String, default: () => new Date().toISOString() },
 })
 

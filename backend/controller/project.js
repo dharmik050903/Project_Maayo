@@ -1,5 +1,6 @@
 import projectinfo from "../schema/projectinfo.js";
 import PersonMaster from "../schema/PersonMaster.js";
+import Bid from "../schema/bid.js";
 
 export default class Project {
     async listproject(req, res) {
@@ -209,6 +210,128 @@ export default class Project {
         } catch (error) {
                 console.error("Error deleting project:", error);
                 return res.status(500).json({message: "Failed to delete project", error: error.message});
+        }
+    }
+
+    // Complete a project (only by project owner)
+    async completeProject(req, res) {
+        try {
+            if(req.headers.user_role !== 'client'){
+                return res.status(403).json({message: "Access denied. Only clients can complete projects."});
+            }
+
+            const user = await PersonMaster.findOne({_id: req.headers.id});
+            if(!user || user.email != req.headers.user_email){
+                return res.status(400).json({message: "Invalid user."});
+            }
+
+            const { id } = req.body || {};
+            if(!id){
+                return res.status(400).json({message: "Project id is required"});
+            }
+
+            const project = await projectinfo.findOne({ _id: id, personid: user._id });
+            if(!project){
+                return res.status(404).json({message: "Project not found or you do not own this project"});
+            }
+
+            // Check if project is active and has an accepted bid
+            if(Number(project.isactive) !== 1){
+                return res.status(400).json({message: "Project must be active to be completed."});
+            }
+
+            if(!project.accepted_bid_id){
+                return res.status(400).json({message: "Project must have an accepted bid to be completed."});
+            }
+
+            // Update project status
+            const updatedProject = await projectinfo.findByIdAndUpdate(
+                id,
+                {
+                    status: 'completed',
+                    isactive: 0,
+                    iscompleted: 1,
+                    completed_at: new Date().toISOString(),
+                    completion_date: new Date().toISOString()
+                },
+                { new: true }
+            )
+            .populate('personid')
+            .populate('freelancerid.freelancerid')
+            .populate('skills_required.skill_id')
+            .populate('accepted_bid_id');
+
+            return res.status(200).json({message: "Project completed successfully", data: updatedProject});
+        } catch (error) {
+            console.error("Error completing project:", error);
+            return res.status(500).json({message: "Failed to complete project", error: error.message});
+        }
+    }
+
+    // Get project statistics
+    async getProjectStats(req, res) {
+        try {
+            const userId = req.headers.id;
+            const userRole = req.headers.user_role;
+
+            let stats = {};
+
+            if (userRole === 'client') {
+                // Client statistics
+                const [totalProjects, activeProjects, completedProjects, totalSpent] = await Promise.all([
+                    projectinfo.countDocuments({ personid: userId }),
+                    projectinfo.countDocuments({ personid: userId, isactive: 1 }),
+                    projectinfo.countDocuments({ personid: userId, iscompleted: 1 }),
+                    projectinfo.aggregate([
+                        { $match: { personid: userId, iscompleted: 1 } },
+                        { $lookup: { from: 'tblbids', localField: 'accepted_bid_id', foreignField: '_id', as: 'bid' } },
+                        { $unwind: '$bid' },
+                        { $group: { _id: null, total: { $sum: '$bid.bid_amount' } } }
+                    ])
+                ]);
+
+                stats = {
+                    totalProjects,
+                    activeProjects,
+                    completedProjects,
+                    totalSpent: totalSpent[0]?.total || 0
+                };
+            } else if (userRole === 'freelancer') {
+                // Freelancer statistics
+                const [totalBids, acceptedBids, completedProjects, totalEarned] = await Promise.all([
+                    Bid.countDocuments({ freelancer_id: userId }),
+                    Bid.countDocuments({ freelancer_id: userId, status: 'accepted' }),
+                    projectinfo.countDocuments({ 
+                        'freelancerid.freelancerid': userId, 
+                        iscompleted: 1 
+                    }),
+                    Bid.aggregate([
+                        { $match: { freelancer_id: userId, status: 'accepted' } },
+                        { $group: { _id: null, total: { $sum: '$bid_amount' } } }
+                    ])
+                ]);
+
+                stats = {
+                    totalBids,
+                    acceptedBids,
+                    completedProjects,
+                    totalEarned: totalEarned[0]?.total || 0
+                };
+            }
+
+            return res.status(200).json({
+                status: true,
+                message: "Project statistics fetched successfully",
+                data: stats
+            });
+
+        } catch (error) {
+            console.error("Error fetching project statistics:", error);
+            return res.status(500).json({
+                status: false,
+                message: "Failed to fetch project statistics",
+                error: error.message
+            });
         }
     }
 }
