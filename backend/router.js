@@ -9,6 +9,7 @@ import skills from "./controller/skills.js";
 import Project from "./controller/project.js";
 import Review from "./controller/review.js";
 import Bid from "./controller/bid.js";
+import OTP from "./controller/otp.js";
 
 
 const router = express.Router();
@@ -21,6 +22,7 @@ const skillsController = new skills();
 const projectController = new Project();
 const reviewController = new Review();
 const bidController = new Bid();
+const otpController = new OTP();
 
 // Route to generate token for testing
 // router.post("/api/generate-token", (req, res) => {
@@ -63,6 +65,13 @@ export default router;
 //Login and Signup Controllers
 router.post("/api/signup",signupController.createuser);
 router.post("/api/login",loginController.authenticate);
+
+// OTP Authentication routes
+router.post("/api/otp/send-login", otpController.sendLoginOTP);
+router.post("/api/otp/verify-login", otpController.verifyLoginOTP);
+router.post("/api/otp/send-password-reset", otpController.sendPasswordResetOTP);
+router.post("/api/otp/verify-password-reset", otpController.verifyPasswordResetOTP);
+router.post("/api/otp/resend", otpController.resendOTP);
 //Skills Controller
 router.post("/api/skills",skillsController.listskills);
 //Freelancer and Client Info Controllers
