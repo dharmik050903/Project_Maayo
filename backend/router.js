@@ -24,41 +24,7 @@ const reviewController = new Review();
 const bidController = new Bid();
 const otpController = new OTP();
 
-// Route to generate token for testing
-// router.post("/api/generate-token", (req, res) => {
-//   try {
-//     const { id, username, role, email } = req.body;
-    
-//     if (!id || !username || !role || !email) {
-//       return res.status(400).json({ 
-//         error: "Missing required fields: id, username, role, email" 
-//       });
-//     }
-    
-//     const token = generateToken({ id, username, role, email });
-//     res.json({ 
-//       message: "Token generated successfully",
-//       token: token,
-//       user: { id, username, role, email }
-//     });
-//   } catch (error) {
-//     res.status(500).json({ error: "Failed to generate token" });
-//   }
-// });
 
-
-// New profile API endpoint with auth middleware
-router.post("/api/profile", auth, (req, res) => {
-  // Your main function logic will go here
-  // req.user contains the decoded token data
-  console.log('Working fine');
-  res.json({ 
-    message: "Profile route accessed successfully",
-    user: req.user 
-  });
-});
-
-export default router;
 
 // Auth routes
 
@@ -82,6 +48,7 @@ router.post("/api/client/info/update",auth,clientinfo.updateClientInfo);
 // Project routes
 router.post("/api/project/create", auth, projectController.createProject);
 router.post("/api/project/list", auth, projectController.listproject);
+router.post("/api/project/search", auth, projectController.searchProjects);
 router.post("/api/project/update", auth, projectController.updateProject);
 router.post("/api/project/delete", auth, projectController.deleteProject);
 router.post("/api/project/complete", auth, projectController.completeProject);
@@ -102,3 +69,6 @@ router.post("/api/bid/accept", auth, bidController.acceptBid);
 router.post("/api/bid/reject", auth, bidController.rejectBid);
 router.post("/api/bid/withdraw", auth, bidController.withdrawBid);
 router.post("/api/bid/update", auth, bidController.updateBid);
+
+
+export default router;

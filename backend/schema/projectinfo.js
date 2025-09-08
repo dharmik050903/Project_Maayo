@@ -52,4 +52,18 @@ const project = new mongoose.Schema({
     createdAt: { type: String, default: () => new Date().toISOString() },
 })
 
+// Text index to enable free-text search across key fields
+project.index({
+    title: 'text',
+    description: 'text',
+    'skills_required.skill': 'text'
+}, {
+    weights: {
+        title: 5,
+        description: 3,
+        'skills_required.skill': 4
+    },
+    name: 'ProjectTextIndex'
+});
+
 export default mongoose.model("tblproject", project);

@@ -3,6 +3,54 @@ import PersonMaster from "../schema/PersonMaster.js";
 import Bid from "../schema/bid.js";
 
 export default class Project {
+    async searchProjects(req, res) {
+        try {
+            const userRole = req.headers.user_role;
+            const { query, page, limit } = req.body || {};
+
+            if (!query || typeof query !== 'string' || query.trim().length === 0) {
+                return res.status(400).json({ status: false, message: "Query is required as a non-empty string" });
+            }
+
+            // Baseline filter: if freelancer, show only pending/open listings like listproject
+            const filter = {};
+            if (userRole === 'freelancer') {
+                filter.ispending = 1;
+                filter.isactive = 0;
+                filter.iscompleted = 0;
+            }
+
+            // Use MongoDB text search on indexed fields
+            const pageNum = Math.max(parseInt(page || 1, 10), 1);
+            const limitNum = Math.max(parseInt(limit || 20, 10), 1);
+            const skipNum = (pageNum - 1) * limitNum;
+
+            const textFilter = { $text: { $search: query } };
+            const finalFilter = { ...filter, ...textFilter };
+
+            const [items, total] = await Promise.all([
+                projectinfo
+                    .find(finalFilter, { score: { $meta: 'textScore' } })
+                    .sort({ score: { $meta: 'textScore' }, createdAt: -1 })
+                    .skip(skipNum)
+                    .limit(limitNum)
+                    .populate('personid')
+                    .populate('freelancerid.freelancerid')
+                    .populate('skills_required.skill_id'),
+                projectinfo.countDocuments(finalFilter)
+            ]);
+
+            return res.status(200).json({
+                status: true,
+                message: "Projects search results",
+                data: items,
+                pagination: { total, page: pageNum, limit: limitNum }
+            });
+        } catch (error) {
+            console.error('Error searching projects:', error);
+            return res.status(500).json({ status: false, message: 'Failed to search projects', error: error.message });
+        }
+    }
     async listproject(req, res) {
         try {
             const { id, personid, isactive, ispending, iscompleted, status, page, limit } = req.body || {};
