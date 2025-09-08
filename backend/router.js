@@ -92,7 +92,7 @@ router.post("/api/review/create", auth, reviewController.createReview);
 router.post("/api/review/user", auth, reviewController.getUserReviews);
 router.post("/api/review/project", auth, reviewController.getProjectReviews);
 router.post("/api/review/update", auth, reviewController.updateReview);
-router.post("/api/review/delete", auth, reviewController.deleteReview);
+// router.post("/api/review/delete", auth, reviewController.deleteReview);
 
 // Bid routes
 router.post("/api/bid/create", auth, bidController.createBid);
