@@ -10,6 +10,7 @@ import Project from "./controller/project.js";
 import Review from "./controller/review.js";
 import Bid from "./controller/bid.js";
 import OTP from "./controller/otp.js";
+import AIController from "./controller/aiController.js";
 
 
 const router = express.Router();
@@ -23,6 +24,7 @@ const projectController = new Project();
 const reviewController = new Review();
 const bidController = new Bid();
 const otpController = new OTP();
+const aiController = new AIController();
 
 
 
@@ -70,6 +72,8 @@ router.post("/api/bid/accept", auth, bidController.acceptBid);
 router.post("/api/bid/reject", auth, bidController.rejectBid);
 router.post("/api/bid/withdraw", auth, bidController.withdrawBid);
 router.post("/api/bid/update", auth, bidController.updateBid);
+// AI routes
+router.post("/api/ai/generate-proposal", auth, aiController.generateProposal);
 
 
 export default router;
