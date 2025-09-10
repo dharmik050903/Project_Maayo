@@ -30,6 +30,7 @@ const otpController = new OTP();
 
 //Login and Signup Controllers
 router.post("/api/signup",signupController.createuser);
+router.post("/api/signup/google",loginController.googleLogin);
 router.post("/api/login",loginController.authenticate);
 
 // OTP Authentication routes
