@@ -43,6 +43,7 @@ router.post("/api/otp/resend", otpController.resendOTP);
 //Skills Controller
 router.post("/api/skills",skillsController.listskills);
 //Freelancer and Client Info Controllers
+router.post("/api/freelancer/list",auth, freelancerinfo.listfreelancer);
 router.post("/api/freelancer/info",auth,freelancerinfo.createFreelancerInfo);
 router.post("/api/freelancer/info/update",auth,freelancerinfo.updateFreelancerInfo);
 router.post("/api/client/info",auth,clientinfo.createClientInfo);
