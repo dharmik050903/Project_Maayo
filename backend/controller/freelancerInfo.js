@@ -24,7 +24,7 @@ export default class FreelancerInfo {
                 // Sorting
                 sort_by = 'createdAt',
                 sort_order = 'desc'
-            } = req.query;
+            } = req.body;
 
             // Input validation
             const pageNum = Math.max(1, parseInt(page));
