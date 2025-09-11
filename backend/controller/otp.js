@@ -9,7 +9,6 @@ export default class OTPController {
     async sendLoginOTP(req, res) {
         try {
             const { email } = req.body;
-
             if (!email) {
                 return res.status(400).json({
                     status: false,
@@ -27,7 +26,6 @@ export default class OTPController {
 
             // Check if user exists
             const user = await PersonMaster.findOne({ email });
-
             if (!user) {
                 return res.status(404).json({
                     status: false,

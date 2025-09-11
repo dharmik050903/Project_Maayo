@@ -74,7 +74,7 @@ try {
 console.log('\n📧 Testing Email Configuration:');
 if (process.env.EMAIL_SERVICE && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
     try {
-        const transporter = nodemailer.createTransporter({
+        const transporter = nodemailer.createTransport({
             service: process.env.EMAIL_SERVICE,
             auth: {
                 user: process.env.EMAIL_USER,

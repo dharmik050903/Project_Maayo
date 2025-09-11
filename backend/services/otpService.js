@@ -1,14 +1,25 @@
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 class OTPService {
     constructor() {
         // Email configuration
+        const emailService = process.env.EMAIL_SERVICE;
+        const emailUser = process.env.EMAIL_USER;
+        const emailPass = process.env.EMAIL_PASS;
+
+        if (!emailUser || !emailPass) {
+            throw new Error('Email credentials missing: set EMAIL_USER and EMAIL_PASS in environment');
+        }
+
         this.emailTransporter = nodemailer.createTransport({
-            service: process.env.EMAIL_SERVICE || 'gmail',
+            service: emailService,
             auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS
+                user: emailUser,
+                pass: emailPass
             }
         });
     }
@@ -33,7 +44,6 @@ class OTPService {
         try {
             const subject = this.getEmailSubject(purpose);
             const htmlContent = this.getEmailTemplate(otp, purpose, userData);
-
             const mailOptions = {
                 from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
                 to: email,
@@ -42,7 +52,6 @@ class OTPService {
             };
 
             const result = await this.emailTransporter.sendMail(mailOptions);
-            console.log('Email sent successfully:', result.messageId);
             return { success: true, messageId: result.messageId };
         } catch (error) {
             console.error('Error sending email:', error);
