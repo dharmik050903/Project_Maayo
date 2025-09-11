@@ -39,8 +39,8 @@ export default class FreelancerInfo {
             }
             const userdeails = user._id
             const name = user.personName
-            const { title, overview, skills, hourly_rate, experience_level, availability, portfolio } = req.body;
-            if (!title || !overview || !skills || !hourly_rate || !experience_level || !availability) {
+            const { title, overview, skills, hourly_rate, experience_level, availability, portfolio,resume_link,github_link } = req.body;
+            if (!title || !overview || !skills || !hourly_rate || !experience_level || !availability ||!resume_link) {
                 return res.status(400).json({ message: "Missing required fields." });
             }   
             const newFreelancerInfo = new freelancerInfo({
@@ -53,6 +53,8 @@ export default class FreelancerInfo {
                 experience_level,
                 availability,
                 portfolio,
+                resume_link,
+                github_link,
                 certification: req.body.certification || [],
                 employement_history: req.body.employement_history || [],
                 highest_education: req.body.highest_education || "",
