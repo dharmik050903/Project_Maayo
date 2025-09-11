@@ -1,6 +1,5 @@
 import express from "express";
 import auth from "./middlewares/auth.js";
-import { generateToken } from "./middlewares/token.js";
 import Signup from "./controller/signup.js";
 import Login from "./controller/login.js";
 import FreelancerInfo from "./controller/freelancerInfo.js";
