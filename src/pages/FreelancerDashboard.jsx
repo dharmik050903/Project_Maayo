@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import Header from '../components/Header'
 import Button from '../components/Button'
@@ -9,12 +9,16 @@ export default function FreelancerDashboard() {
   const [freelancerInfo, setFreelancerInfo] = useState(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const hasInitialized = useRef(false)
   const [message, setMessage] = useState(null)
   const [isFirstTime, setIsFirstTime] = useState(true)
   const [skillsList, setSkillsList] = useState([])
   const [selectedSkills, setSelectedSkills] = useState([])
   const [skillsSearchTerm, setSkillsSearchTerm] = useState('')
   const [availability, setAvailability] = useState('')
+  const skillsInputRef = useRef(null)
+  const [resumeLink, setResumeLink] = useState('')
+  const [githubLink, setGithubLink] = useState('')
   const [certifications, setCertifications] = useState([{ name: '', link: '' }])
   const [profileData, setProfileData] = useState({
     hourly_rate: '',
@@ -28,20 +32,47 @@ export default function FreelancerDashboard() {
 
 
   useEffect(() => {
-    // Check if user is authenticated
-    if (!isAuthenticated()) {
-      window.location.href = '/login'
-      return
-    }
-    
-    // Get user data
-    const user = getCurrentUser()
-    if (user) {
-      setUserData(user)
+    if (!hasInitialized.current) {
+      hasInitialized.current = true
+      console.log('FreelancerDashboard: useEffect started (first time)')
       
-      // Check if user already has a profile in database
-      checkExistingProfile(user._id)
-      fetchSkills()
+      // Check if user is authenticated
+      if (!isAuthenticated()) {
+        console.log('FreelancerDashboard: User not authenticated, redirecting to login')
+        window.location.href = '/login'
+        return
+      }
+      
+      // Get user data
+      const user = getCurrentUser()
+      console.log('FreelancerDashboard: User data:', user)
+      
+      if (user) {
+        setUserData(user)
+        
+        // Check if user already has a profile in database
+        checkExistingProfile(user._id)
+        fetchSkills()
+      } else {
+        console.log('FreelancerDashboard: No user data found')
+        setLoading(false)
+      }
+    } else {
+      console.log('FreelancerDashboard: Skipping duplicate initialization due to StrictMode')
+    }
+  }, [])
+
+  // Handle clicking outside skills input to remove focus
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (skillsInputRef.current && !skillsInputRef.current.contains(event.target)) {
+        skillsInputRef.current.blur()
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [])
 
@@ -61,10 +92,33 @@ export default function FreelancerDashboard() {
         profileData: profileData ? 'exists' : 'null'
       })
       
-      // If we have completion flag and data, redirect immediately
+      // If we have completion flag and data, load the profile data but don't redirect
       if (profileCompleted === 'true' && profileData) {
-        console.log('📝 Found completed profile in localStorage - redirecting to home')
-        window.location.href = "/freelancer-home"
+        console.log('📝 Found completed profile in localStorage - loading profile data')
+        try {
+          const parsedProfileData = JSON.parse(profileData)
+          setFreelancerInfo(parsedProfileData)
+          setIsFirstTime(false)
+          
+          // Populate form data
+          setProfileData({
+            hourly_rate: parsedProfileData.hourly_rate || '',
+            experience_level: parsedProfileData.experience_level || '',
+            summary: parsedProfileData.overview || '',
+            education: parsedProfileData.highest_education || '',
+            work_history: parsedProfileData.work_history || ''
+          })
+          setSelectedSkills(parsedProfileData.skills?.map(skill => skill.skill_id) || [])
+          setAvailability(parsedProfileData.availability || '')
+          setResumeLink(parsedProfileData.resume_link || '')
+          setGithubLink(parsedProfileData.github_link || '')
+          setCertifications(parsedProfileData.certification?.length > 0 ? parsedProfileData.certification : [{ name: '', link: '' }])
+          setEmploymentHistory(parsedProfileData.employement_history?.length > 0 ? parsedProfileData.employement_history : [{ compayname: '', role: '', years: '', months: '' }])
+          setHasExperience(parsedProfileData.employement_history?.length > 0)
+        } catch (error) {
+          console.error('Error parsing profile data:', error)
+        }
+        setLoading(false)
         return
       }
       
@@ -83,11 +137,32 @@ export default function FreelancerDashboard() {
           
           if (verifyResponse.ok) {
             const data = await verifyResponse.json()
-            console.log('✅ Profile exists in database - redirecting to home')
+            console.log('✅ Profile exists in database - loading profile data')
             // Store the completion flag
             localStorage.setItem('freelancer_profile_completed', 'true')
             localStorage.setItem('freelancer_profile_data', JSON.stringify(data.data))
-            window.location.href = "/freelancer-home"
+            
+            // Load profile data instead of redirecting
+            setFreelancerInfo(data.data)
+            setIsFirstTime(false)
+            
+            // Populate form data
+            setProfileData({
+              hourly_rate: data.data.hourly_rate || '',
+              experience_level: data.data.experience_level || '',
+              summary: data.data.overview || '',
+              education: data.data.highest_education || '',
+              work_history: data.data.work_history || ''
+            })
+            setSelectedSkills(data.data.skills?.map(skill => skill.skill_id) || [])
+            setAvailability(data.data.availability || '')
+            setResumeLink(data.data.resume_link || '')
+            setGithubLink(data.data.github_link || '')
+            setCertifications(data.data.certification?.length > 0 ? data.data.certification : [{ name: '', link: '' }])
+            setEmploymentHistory(data.data.employement_history?.length > 0 ? data.data.employement_history : [{ compayname: '', role: '', years: '', months: '' }])
+            setHasExperience(data.data.employement_history?.length > 0)
+            
+            setLoading(false)
             return
           } else {
             console.log('❌ Stored profile not found in database, clearing localStorage')
@@ -158,6 +233,8 @@ export default function FreelancerDashboard() {
           })
           setSelectedSkills(data.data.skills?.map(skill => skill.skill_id) || [])
           setAvailability(data.data.availability || '')
+          setResumeLink(data.data.resume_link || '')
+          setGithubLink(data.data.github_link || '')
           setCertifications(data.data.certification?.length > 0 ? data.data.certification : [{ name: '', link: '' }])
           setEmploymentHistory(data.data.employement_history?.length > 0 ? data.data.employement_history : [{ compayname: '', role: '', years: '', months: '' }])
           setHasExperience(data.data.employement_history?.length > 0)
@@ -191,11 +268,12 @@ export default function FreelancerDashboard() {
         })
         setSelectedSkills(profileData.skills?.map(skill => skill.skill_id) || [])
         setAvailability(profileData.availability || '')
+        setResumeLink(profileData.resume_link || '')
+        setGithubLink(profileData.github_link || '')
         setCertifications(profileData.certification?.length > 0 ? profileData.certification : [{ name: '', link: '' }])
         setEmploymentHistory(profileData.employement_history?.length > 0 ? profileData.employement_history : [{ compayname: '', role: '', years: '', months: '' }])
         setHasExperience(profileData.employement_history?.length > 0)
       } else {
-        // No saved profile, this is first time
         setIsFirstTime(true)
         setFreelancerInfo(null)
       }
@@ -206,6 +284,31 @@ export default function FreelancerDashboard() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const getFallbackSkills = () => {
+    return [
+      { _id: 'skill_1', skill: 'React', category: 'Frontend' },
+      { _id: 'skill_2', skill: 'Node.js', category: 'Backend' },
+      { _id: 'skill_3', skill: 'JavaScript', category: 'Programming' },
+      { _id: 'skill_4', skill: 'Python', category: 'Programming' },
+      { _id: 'skill_5', skill: 'HTML/CSS', category: 'Frontend' },
+      { _id: 'skill_6', skill: 'MongoDB', category: 'Database' },
+      { _id: 'skill_7', skill: 'Express.js', category: 'Backend' },
+      { _id: 'skill_8', skill: 'UI/UX Design', category: 'Design' },
+      { _id: 'skill_9', skill: 'Figma', category: 'Design' },
+      { _id: 'skill_10', skill: 'Git', category: 'Tools' },
+      { _id: 'skill_11', skill: 'AWS', category: 'Cloud' },
+      { _id: 'skill_12', skill: 'Docker', category: 'DevOps' },
+      { _id: 'skill_13', skill: 'TypeScript', category: 'Programming' },
+      { _id: 'skill_14', skill: 'Vue.js', category: 'Frontend' },
+      { _id: 'skill_15', skill: 'Angular', category: 'Frontend' },
+      { _id: 'skill_16', skill: 'PHP', category: 'Backend' },
+      { _id: 'skill_17', skill: 'Laravel', category: 'Backend' },
+      { _id: 'skill_18', skill: 'MySQL', category: 'Database' },
+      { _id: 'skill_19', skill: 'PostgreSQL', category: 'Database' },
+      { _id: 'skill_20', skill: 'GraphQL', category: 'Backend' }
+    ]
   }
 
   const fetchSkills = async () => {
@@ -280,6 +383,14 @@ export default function FreelancerDashboard() {
   const handleSaveCertificates = async () => {
     setSaving(true)
     setMessage(null)
+    
+    // Validate required fields
+    if (!resumeLink.trim()) {
+      setMessage({ type: 'error', text: 'Resume link is required. Please paste your open link of resume.' })
+      setSaving(false)
+      return
+    }
+    
     try {
       const profilePayload = {
         title: `${userData?.first_name} ${userData?.last_name}`,
@@ -294,6 +405,8 @@ export default function FreelancerDashboard() {
         hourly_rate: profileData.hourly_rate,
         experience_level: profileData.experience_level,
         availability: availability,
+        resume_link: resumeLink,
+        github_link: githubLink,
         certification: certifications.filter(cert => cert.name.trim() !== ''),
         employement_history: hasExperience ? employmentHistory.filter(emp => emp.compayname.trim() !== '') : [],
         highest_education: profileData.education
@@ -341,6 +454,13 @@ export default function FreelancerDashboard() {
     setSaving(true)
     setMessage(null)
 
+    // Validate required fields
+    if (!resumeLink.trim()) {
+      setMessage({ type: 'error', text: 'Resume link is required. Please paste your open link of resume.' })
+      setSaving(false)
+      return
+    }
+
     try {
       const profilePayload = {
         title: `${userData?.first_name} ${userData?.last_name}`,
@@ -355,6 +475,8 @@ export default function FreelancerDashboard() {
         hourly_rate: profileData.hourly_rate,
         experience_level: profileData.experience_level,
         availability: availability,
+        resume_link: resumeLink,
+        github_link: githubLink,
         certification: certifications.filter(cert => cert.name.trim() !== ''),
         employement_history: hasExperience ? employmentHistory.filter(emp => emp.compayname.trim() !== '') : [],
         highest_education: profileData.education
@@ -387,7 +509,6 @@ export default function FreelancerDashboard() {
         const successMessage = isFirstTime ? 'Profile created successfully! 🎉' : 'Profile updated successfully! 🎉'
         setMessage({ type: 'success', text: successMessage })
         
-        // Store profile data in localStorage
         localStorage.setItem('freelancer_profile_data', JSON.stringify(data.data))
         localStorage.setItem('freelancer_profile_completed', 'true')
         localStorage.setItem('freelancer_profile_id', data.data._id)
@@ -404,7 +525,6 @@ export default function FreelancerDashboard() {
           profileIdLength: data.data._id?.length
         })
         
-        // Verify localStorage was set correctly
         console.log('🔍 Verifying localStorage after save:', {
           profileData: localStorage.getItem('freelancer_profile_data'),
           profileCompleted: localStorage.getItem('freelancer_profile_completed'),
@@ -412,11 +532,9 @@ export default function FreelancerDashboard() {
           personId: localStorage.getItem('freelancer_personId')
         })
         
-        // Update state to reflect this is no longer first time
         setIsFirstTime(false)
         setFreelancerInfo(data.data)
         
-        // Redirect to home page after successful save
         setTimeout(() => {
           window.location.href = "/freelancer-home"
         }, 2000)
@@ -646,6 +764,41 @@ export default function FreelancerDashboard() {
                     </p>
                   )}
                 </div>
+                
+                {/* Resume Link Field */}
+                <div>
+                  <label className="block text-sm font-medium text-graphite mb-1">
+                    Resume Link <span className="text-coral">*</span>
+                  </label>
+                  <input
+                    type="url"
+                    value={resumeLink}
+                    onChange={(e) => setResumeLink(e.target.value)}
+                    placeholder="https://drive.google.com/file/d/your-resume-link/view"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-violet text-sm text-graphite bg-white"
+                    required
+                  />
+                  <p className="text-xs text-coral mt-1">
+                    Please paste your open link of resume
+                  </p>
+                </div>
+                
+                {/* GitHub Link Field */}
+                <div>
+                  <label className="block text-sm font-medium text-graphite mb-1">
+                    GitHub Link <span className="text-coolgray text-xs">(Optional)</span>
+                  </label>
+                  <input
+                    type="url"
+                    value={githubLink}
+                    onChange={(e) => setGithubLink(e.target.value)}
+                    placeholder="https://github.com/yourusername"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-violet text-sm text-graphite bg-white"
+                  />
+                  <p className="text-xs text-coolgray mt-1">
+                    Share your GitHub profile to showcase your projects
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -803,6 +956,7 @@ export default function FreelancerDashboard() {
                 {/* Skills Search Input */}
                 <div className="mb-3">
                   <input
+                    ref={skillsInputRef}
                     type="text"
                     placeholder="Search skills..."
                     value={skillsSearchTerm}

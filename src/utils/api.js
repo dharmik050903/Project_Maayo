@@ -60,13 +60,36 @@ export async function authenticatedFetch(url, options = {}) {
 }
 
 /**
- * Check if user is authenticated
- * @returns {boolean} True if user has valid auth data
+ * Check if user is authenticated and token is valid
+ * @returns {boolean} True if user has valid auth data and token
  */
 export function isAuthenticated() {
   const authHeaders = localStorage.getItem('authHeaders')
   const authToken = localStorage.getItem('authToken')
-  return !!(authHeaders && authToken)
+  
+  if (!authHeaders || !authToken) {
+    return false
+  }
+  
+  try {
+    // Parse the token to check if it's expired
+    const tokenPayload = JSON.parse(atob(authToken.split('.')[1]))
+    const currentTime = Math.floor(Date.now() / 1000)
+    
+    // Check if token is expired
+    if (tokenPayload.exp && tokenPayload.exp < currentTime) {
+      console.log('Token has expired, clearing auth data')
+      clearAuth()
+      return false
+    }
+    
+    return true
+  } catch (error) {
+    console.error('Error checking token validity:', error)
+    // If we can't parse the token, clear auth data
+    clearAuth()
+    return false
+  }
 }
 
 /**
@@ -92,6 +115,7 @@ export function clearAuth() {
   localStorage.removeItem('authToken')
   localStorage.removeItem('userData')
   localStorage.removeItem('authHeaders')
+  localStorage.removeItem('tokenExpiration')
   // Don't clear profile data - it should persist across logins
   // localStorage.removeItem('freelancer_profile_completed')
   // localStorage.removeItem('client_profile_completed')
@@ -108,6 +132,7 @@ export function clearAllData() {
   localStorage.removeItem('authToken')
   localStorage.removeItem('userData')
   localStorage.removeItem('authHeaders')
+  localStorage.removeItem('tokenExpiration')
   localStorage.removeItem('freelancer_profile_completed')
   localStorage.removeItem('client_profile_completed')
   localStorage.removeItem('freelancer_profile_data')
@@ -138,6 +163,76 @@ export function storeAuthData(authData) {
     userEmail: user.email
   }
   localStorage.setItem('authHeaders', JSON.stringify(authHeaders))
+  
+  // Store token expiration time for easy checking
+  try {
+    const tokenPayload = JSON.parse(atob(token.split('.')[1]))
+    if (tokenPayload.exp) {
+      localStorage.setItem('tokenExpiration', tokenPayload.exp.toString())
+    }
+  } catch (error) {
+    console.error('Error storing token expiration:', error)
+  }
+}
+
+/**
+ * Check if token is close to expiration (within 7 days)
+ * @returns {boolean} True if token expires within 7 days
+ */
+export function isTokenNearExpiration() {
+  const tokenExpiration = localStorage.getItem('tokenExpiration')
+  if (!tokenExpiration) return false
+  
+  const expirationTime = parseInt(tokenExpiration)
+  const currentTime = Math.floor(Date.now() / 1000)
+  const sevenDaysInSeconds = 7 * 24 * 60 * 60 // 7 days
+  
+  return (expirationTime - currentTime) < sevenDaysInSeconds
+}
+
+/**
+ * Get token expiration date
+ * @returns {Date|null} Token expiration date or null
+ */
+export function getTokenExpirationDate() {
+  const tokenExpiration = localStorage.getItem('tokenExpiration')
+  if (!tokenExpiration) return null
+  
+  const expirationTime = parseInt(tokenExpiration)
+  return new Date(expirationTime * 1000)
+}
+
+/**
+ * Check and maintain user session
+ * This should be called on app startup to ensure user stays logged in
+ * @returns {Object} Session status
+ */
+export function checkSession() {
+  const isAuth = isAuthenticated()
+  const user = getCurrentUser()
+  const tokenExpiration = getTokenExpirationDate()
+  
+  if (!isAuth || !user) {
+    return {
+      isAuthenticated: false,
+      user: null,
+      tokenExpiration: null,
+      message: 'User not authenticated'
+    }
+  }
+  
+  const now = new Date()
+  const timeUntilExpiration = tokenExpiration ? tokenExpiration.getTime() - now.getTime() : 0
+  const daysUntilExpiration = Math.floor(timeUntilExpiration / (1000 * 60 * 60 * 24))
+  
+  return {
+    isAuthenticated: true,
+    user,
+    tokenExpiration,
+    daysUntilExpiration,
+    isNearExpiration: isTokenNearExpiration(),
+    message: `Session valid for ${daysUntilExpiration} more days`
+  }
 }
 
 // ============================================================================

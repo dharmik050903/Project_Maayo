@@ -1,8 +1,19 @@
-export default function Button({ children, variant = 'primary', loading = false, ...props }) {
-  const classes = variant === 'accent' ? 'btn-accent' : 'btn-primary'
+export default function Button({ children, variant = 'primary', loading = false, className = '', ...props }) {
+  const getVariantClasses = () => {
+    switch (variant) {
+      case 'accent':
+        return 'btn-accent'
+      case 'secondary':
+        return 'inline-flex items-center justify-center px-4 py-2 rounded-lg font-medium text-graphite bg-gray-100 hover:bg-gray-200 transition'
+      case 'danger':
+        return 'inline-flex items-center justify-center px-4 py-2 rounded-lg font-medium text-white bg-coral hover:bg-coral/90 transition'
+      default:
+        return 'btn-primary'
+    }
+  }
 
   return (
-    <button className={`${classes} disabled:opacity-60`} disabled={loading} {...props}>
+    <button className={`${getVariantClasses()} disabled:opacity-60 ${className}`} disabled={loading} {...props}>
       {loading ? (
         <span className="flex items-center gap-2">
           <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
