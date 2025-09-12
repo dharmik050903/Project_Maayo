@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
-export default function CountrySelect({ countries, value, onChange, placeholder = 'Select a country...' }) {
+export default function CountrySelect({ countries, value, onChange, placeholder = 'Select a country...', required = false }) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [highlighted, setHighlighted] = useState(0)
@@ -65,16 +65,19 @@ export default function CountrySelect({ countries, value, onChange, placeholder 
   return (
     <div ref={containerRef} className="relative">
       <label className="block space-y-1.5">
-        <span className="text-sm text-graphite">Country</span>
+        <span className="text-sm text-graphite">
+          Country {required && <span className="text-red-500">*</span>}
+        </span>
         <div className="relative">
           <input
             type="text"
             className="input pr-10 cursor-text"
-            placeholder={selected ? selected.name : placeholder}
-            value={query}
+            placeholder={placeholder}
+            value={open ? query : (selected ? selected.name : '')}
             onChange={e => { setQuery(e.target.value); setOpen(true) }}
             onFocus={() => setOpen(true)}
             onKeyDown={handleKeyDown}
+            required={required}
           />
           <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-coolgray" onClick={() => setOpen(o => !o)}>
             ▼
