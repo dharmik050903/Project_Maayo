@@ -51,6 +51,7 @@ router.post("/api/client/info/update",auth,clientinfo.updateClientInfo);
 // Project routes
 router.post("/api/project/create", auth, projectController.createProject);
 router.post("/api/project/list", auth, projectController.listproject);
+router.post("/api/project/browse",projectController.listproject);
 router.post("/api/project/search", auth, projectController.searchProjects);
 router.post("/api/project/update", auth, projectController.updateProject);
 router.post("/api/project/delete", auth, projectController.deleteProject);
